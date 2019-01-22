@@ -1,0 +1,345 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-Hans" xmlns:v-bind="http://www.w3.org/1999/xhtml">
+
+<head><meta name="generator" content="Hexo 3.8.0">
+    <title>在Apache服务器上实现tls Websocket转发v2ray代理 - 百忍千锻事遂全</title>
+<meta charset="utf-8">
+<meta name="X-UA-Compatible" content="IE=edge">
+<meta name="author" content="Dakai">
+<meta name="description" content="
+因为Nginx的rewrite规则实在是太头疼了，服务器上还要用Apache放别的网站内容，相比之下还是用Apa...">
+<meta name="keywords" content="Linux,v2ray,gfw,vps,Apache">
+
+<link rel="alternate" type="application/atom+xml" title="ATOM 1.0" href="/atom.xml">
+
+    <meta charset="utf-8">
+    <meta name="X-UA-Compatible" content="IE=edge">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+    <meta content="telephone=no" name="format-detection">
+    <meta name="renderer" content="webkit">
+    <meta name="theme-color" content="#ffffff">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/css/bootstrap.min.css" integrity="sha256-eSi1q2PG6J7g7ib17yAaWMcrr5GrtohYChqibrV7PBE=" crossorigin="anonymous">
+<link rel="stylesheet" href="/css/journal.css?69440914">
+<script src="/js/loadCSS.js"></script>
+<script>
+    loadCSS("https://fonts.googleapis.com/css?family=Lora|Montserrat|Fira+Mono|Material+Icons");
+    (function (d) {
+        var config = {
+                kitId: 'dwg1tuc',
+                scriptTimeout: 3000,
+                async: true
+            },
+            h = d.documentElement, t = setTimeout(function () {
+                h.className = h.className.replace(/\bwf-loading\b/g, "") + " wf-inactive";
+            }, config.scriptTimeout), tk = d.createElement("script"), f = false,
+            s = d.getElementsByTagName("script")[0], a;
+        h.className += " wf-loading";
+        tk.src = 'https://use.typekit.net/' + config.kitId + '.js';
+        tk.async = true;
+        tk.onload = tk.onreadystatechange = function () {
+            a = this.readyState;
+            if (f || a && a != "complete" && a != "loaded") return;
+            f = true;
+            clearTimeout(t);
+            try {
+                Typekit.load(config)
+            } catch (e) {
+            }
+        };
+        s.parentNode.insertBefore(tk, s)
+    })(document);
+</script>
+<noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lora|Montserrat|Anonymous+Pro:400|Material+Icons">
+</noscript>
+</head>
+<body>
+<div id="top"></div>
+<div id="app">
+<div class="single-column-drawer-container" ref="drawer" v-bind:class="{ 'single-column-drawer-container-active': isDrawerOpen }">
+    <div class="drawer-content">
+        <div class="drawer-menu">
+            <a class="a-block drawer-menu-item false" href="http://yoursite.com">
+                Home
+            </a>
+            <a class="a-block drawer-menu-item false" href="/archives">
+                Archive
+            </a>
+
+            
+            
+
+            
+            <a class="a-block drawer-menu-item" href="/atom.xml">
+                RSS
+            </a>
+            
+        </div>
+    </div>
+</div>
+<transition name="fade">
+    <div v-bind:class="{ 'single-column-drawer-mask': mounted }" v-if="isDrawerOpen" v-on:click="toggleDrawer"></div>
+</transition>
+<nav ref="navBar" class="navbar sticky-top navbar-light single-column-nav-container">
+    <div ref="navBackground" class="nav-background"></div>
+    <div class="container container-narrow nav-content">
+        <button id="nav_dropdown_btn" class="nav-dropdown-toggle" type="button" v-on:click="toggleDrawer">
+            <i class="material-icons">
+                menu
+            </i>
+        </button>
+        <a ref="navTitle" class="navbar-brand" href="/">
+            百忍千锻事遂全
+        </a>
+    </div>
+</nav>
+<div class="single-column-header-container" ref="pageHead" v-bind:style="{ transform: 'translateZ(0px) translateY('+.3*scrollY+'px)', opacity: 1-navOpacity }">
+    <a href="/">
+        <div class="single-column-header-title">百忍千锻事遂全</div>
+        <div class="single-column-header-subtitle"></div>
+    </a>
+</div>
+<div ref="sideContainer" class="side-container">
+    <a class="a-block nav-head false" href="/">
+        <div class="nav-title">
+            百忍千锻事遂全
+        </div>
+        <div class="nav-subtitle">
+            Behind the sheer black cliff rises <br>the golden glory of the invisible sun
+        </div>
+    </a>
+
+    <div class="nav-link-list">
+        <a class="a-block no-tint nav-link-item false" href="/archives">
+            Archive
+        </a>
+
+        
+        
+
+        
+        <a class="a-block no-tint nav-link-item" href="/atom.xml">
+            RSS
+        </a>
+        
+    </div>
+
+    
+    <div class="nav-footer">
+        Proudly published with Hexo<br>
+        
+        Theme <a href="https://github.com/SumiMakito/hexo-theme-journal/" target="_blank" rel="noreferrer noopener">Journal.</a> by <a href="https://mak1t0.cc/" target="_blank" rel="noreferrer noopener">Makito</a><br>
+        
+        &copy; 2019 <a href="http://yoursite.com">百忍千锻事遂全</a>
+    </div>
+</div>
+<div ref="extraContainer" class="extra-container">
+    <div class="pagination">
+        <a id="globalBackToTop" class="pagination-action animated-visibility" href="#top" :class="{ invisible: scrollY == 0 }">
+            <i class="material-icons pagination-action-icon">
+                keyboard_arrow_up
+            </i>
+        </a>
+
+        
+    </div>
+</div>
+
+<div ref="streamContainer" class="stream-container">
+    <div class="post-list-container post-list-container-shadow">
+        <div class="post">
+            <div class="post-head-wrapper-text-only" style="background-image: url('')">
+                <div class="post-title">
+                    在Apache服务器上实现tls Websocket转发v2ray代理
+                    <div class="post-meta">
+                        <time datetime="2017-12-22T12:45:45.000Z" itemprop="datePublished">
+                            2017-12-22 20:45
+                        </time>&nbsp;
+                        
+                        
+                        <i class="material-icons" style="">folder</i>
+                        
+                        <a href="/categories/工具/">工具</a>
+                        
+                        
+    
+                        
+                        
+                        <i class="material-icons" style="">label</i>
+                        
+                        <a href="/tags/Linux/">Linux</a>, 
+                        
+                        <a href="/tags/vps/">vps</a>, 
+                        
+                        <a href="/tags/v2ray/">v2ray</a>, 
+                        
+                        <a href="/tags/gfw/">gfw</a>
+                        
+                        
+                    </div>
+                </div>
+            </div>
+    
+            <div class="post-body-wrapper">
+                <div class="post-body">
+                    <blockquote>
+<p>因为Nginx的rewrite规则实在是太头疼了，服务器上还要用Apache放别的网站内容，相比之下还是用Apache转发v2ray代理更简单一点。</p>
+</blockquote>
+<p>首先请根据这个教程：<a href="https://toutyrater.github.io/advanced/tls.html#" target="_blank" rel="noopener">v2ray白话文教程</a>注册好域名和生成证书。</p>
+<p>安装好Apache之后，在服务器上开启以下apache模组：</p>
+<pre><code>sudo a2enmod ssl
+sudo a2enmod proxy
+sudo a2enmod proxy_wstunnel
+sudo a2enmod proxy_http
+sudo a2enmod rewrite
+sudo a2enmod headers
+</code></pre><p>Apache配置</p>
+<pre><code>nano /etc/apache2/sites-available/yourdomain.com.conf
+</code></pre><p>填入以下内容</p>
+<pre><code>&lt;VirtualHost *:443&gt;
+
+        ServerName yourdomain.com.
+        ServerAlias yourdomain.com.
+        ##SSL Engine Switch:
+        #Enable/Disable SSL for this virtual host.
+        SSLEngine On
+
+        RewriteEngine On
+          RewriteCond %{HTTP:Upgrade} =websocket [NC]
+         RewriteRule /(.*)           ws://localhost:3579/$1 [P,L]
+        RewriteCond %{HTTP:Upgrade} !=websocket [NC]
+        RewriteRule /(.*)           http://localhost:3579/$1 [P,L]
+
+
+        ##Proxy to port 3579
+        #Replace xxx.xxx.xxx.xxx with your servers IP adress or hostname
+        #Replace yourCertname with your servers SSL certificate name
+        SSLProxyEngine On
+        Proxypass /ray http://127.0.0.1:3579
+        ProxyPassReverse /ray http://127.0.0.1:3579
+
+        SSLCertificateFile /etc/v2ray/v2ray.crt
+        SSLCertificateKeyFile /etc/v2ray/v2ray.key
+
+&lt;/VirtualHost&gt;
+</code></pre><p>启动网站，重启apache服务</p>
+<pre><code>sudo a2ensite yourdomain.com
+sudo service apache2 restart
+</code></pre><p>服务器端V2ray配置</p>
+<pre><code>  {
+    &quot;log&quot; : {
+      &quot;access&quot;: &quot;/var/log/v2ray/access.log&quot;,
+      &quot;error&quot;: &quot;/var/log/v2ray/error.log&quot;,
+      &quot;loglevel&quot;: &quot;warning&quot;
+  },
+    &quot;inbound&quot;: {
+      &quot;port&quot;: 3579,
+      &quot;listen&quot;:&quot;127.0.0.1&quot;,
+      &quot;protocol&quot;: &quot;vmess&quot;,
+      &quot;settings&quot;: {
+        &quot;clients&quot;: [
+          {
+            &quot;id&quot;: &quot;your id&quot;,
+            &quot;level&quot;: 1,
+            &quot;alterId&quot;: 64
+          }   
+          ]
+      },
+      &quot;streamSettings&quot;:{
+        &quot;network&quot;:&quot;ws&quot;,
+        &quot;wsSettings&quot;:{
+          &quot;path&quot;:&quot;/ray&quot;
+          }
+        }
+      },
+  &quot;outbound&quot;: {
+    &quot;protocol&quot;: &quot;freedom&quot;,
+    &quot;settings&quot;: {}
+    },
+  &quot;outboundDetour&quot;: [
+    {
+    &quot;protocol&quot;: &quot;blackhole&quot;,
+    &quot;settings&quot;: {},
+    &quot;tag&quot;: &quot;blocked&quot;
+    }
+  ]
+}
+</code></pre><p>V2ray客户端配置（部分）</p>
+<pre><code>&quot;outbound&quot;: {
+&quot;protocol&quot;: &quot;vmess&quot;,
+&quot;settings&quot;:{
+  &quot;vnext&quot;:[
+          {
+          &quot;address&quot;:&quot;yourdomain.com&quot;,
+          &quot;port&quot;: 443,
+          &quot;users&quot;: [
+              {
+              &quot;id&quot;: &quot;your id&quot;,
+              &quot;level&quot;: 1,
+              &quot;alterId&quot;: 64,
+              &quot;security&quot;:&quot;auto&quot;
+              }
+           ]
+          }
+          ]
+          },
+&quot;streamSettings&quot;: {
+  &quot;network&quot;: &quot;ws&quot;,
+  &quot;security&quot;:&quot;tls&quot;,
+  &quot;tlsSettings&quot;:{
+  &quot;serverName&quot;:&quot;yourdomain.com&quot;,
+  &quot;allowInsecure&quot;:true
+  },
+  &quot;wsSettings&quot;:{
+  &quot;path&quot;:&quot;/ray&quot;
+  }
+  },
+&quot;mux&quot;: {&quot;enabled&quot;:true}
+},
+</code></pre>
+                </div>
+            </div>
+    
+            <nav class="post-pagination">
+    
+    <a class="newer-posts" href="/2018/06/03/dns-over-https/">
+        Previous post<br>内网虚拟机上DNS-over-https服务器
+    </a>
+    
+    <span class="page-number"></span>
+    
+    <a class="older-posts" href="/2017/11/27/v2ray/">
+        Next post<br>网关服务器上设置V2Ray+dnsmasq透明代理
+    </a>
+    
+</nav>
+
+    
+            
+
+
+        </div>
+    </div>
+    <div class="single-column-footer">
+    Proudly published with Hexo<br>
+    
+    Theme <a href="https://github.com/SumiMakito/hexo-theme-journal/" target="_blank" rel="noreferrer noopener">Journal.</a> by <a href="https://mak1t0.cc/" target="_blank" rel="noreferrer noopener">Makito</a><br>
+    
+    &copy; 2018 <a href="http://yoursite.com">百忍千锻事遂全</a>
+</div>
+</div>
+
+</div>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.4/dist/umd/popper.min.js" integrity="sha256-EGs9T1xMHdvM1geM8jPpoo8EZ1V1VRsmcJz8OByENLA=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/js/bootstrap.min.js" integrity="sha256-VsEqElsCHSGmnmHXGQzvoWjWwoznFSZc6hs7ARLRacQ=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.min.js" integrity="sha256-FtWfRI+thWlNz2sB3SJbwKx5PgMyKIVgwHCTwa3biXc=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/smooth-scroll@14.2.1/dist/smooth-scroll.polyfills.min.js" integrity="sha256-CI4Gq5E0io1Pv0xM3qPM+NUIOhbIBvC3GiN1Y4KhXpw=" crossorigin="anonymous"></script>
+<script src="/js/journal.js?54699895"></script>
+
+
+
+</body>
+</html>

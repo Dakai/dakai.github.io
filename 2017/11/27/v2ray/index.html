@@ -1,0 +1,530 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-Hans" xmlns:v-bind="http://www.w3.org/1999/xhtml">
+
+<head><meta name="generator" content="Hexo 3.8.0">
+    <title>网关服务器上设置V2Ray+dnsmasq透明代理 - 百忍千锻事遂全</title>
+<meta charset="utf-8">
+<meta name="X-UA-Compatible" content="IE=edge">
+<meta name="author" content="Dakai">
+<meta name="description" content="
+实在受不了SS和SSR因为开大会而不停抽风的情况，一下午仔细读了V2Ray的说明，终于配置好了，其实搞清楚了也很...">
+<meta name="keywords" content="Linux,V2Ray,gfw,vps,透明代理">
+
+<link rel="alternate" type="application/atom+xml" title="ATOM 1.0" href="/atom.xml">
+
+    <meta charset="utf-8">
+    <meta name="X-UA-Compatible" content="IE=edge">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+    <meta content="telephone=no" name="format-detection">
+    <meta name="renderer" content="webkit">
+    <meta name="theme-color" content="#ffffff">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/css/bootstrap.min.css" integrity="sha256-eSi1q2PG6J7g7ib17yAaWMcrr5GrtohYChqibrV7PBE=" crossorigin="anonymous">
+<link rel="stylesheet" href="/css/journal.css?67935774">
+<script src="/js/loadCSS.js"></script>
+<script>
+    loadCSS("https://fonts.googleapis.com/css?family=Lora|Montserrat|Fira+Mono|Material+Icons");
+    (function (d) {
+        var config = {
+                kitId: 'dwg1tuc',
+                scriptTimeout: 3000,
+                async: true
+            },
+            h = d.documentElement, t = setTimeout(function () {
+                h.className = h.className.replace(/\bwf-loading\b/g, "") + " wf-inactive";
+            }, config.scriptTimeout), tk = d.createElement("script"), f = false,
+            s = d.getElementsByTagName("script")[0], a;
+        h.className += " wf-loading";
+        tk.src = 'https://use.typekit.net/' + config.kitId + '.js';
+        tk.async = true;
+        tk.onload = tk.onreadystatechange = function () {
+            a = this.readyState;
+            if (f || a && a != "complete" && a != "loaded") return;
+            f = true;
+            clearTimeout(t);
+            try {
+                Typekit.load(config)
+            } catch (e) {
+            }
+        };
+        s.parentNode.insertBefore(tk, s)
+    })(document);
+</script>
+<noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lora|Montserrat|Anonymous+Pro:400|Material+Icons">
+</noscript>
+</head>
+<body>
+<div id="top"></div>
+<div id="app">
+<div class="single-column-drawer-container" ref="drawer" v-bind:class="{ 'single-column-drawer-container-active': isDrawerOpen }">
+    <div class="drawer-content">
+        <div class="drawer-menu">
+            <a class="a-block drawer-menu-item false" href="http://yoursite.com">
+                Home
+            </a>
+            <a class="a-block drawer-menu-item false" href="/archives">
+                Archive
+            </a>
+
+            
+            
+
+            
+            <a class="a-block drawer-menu-item" href="/atom.xml">
+                RSS
+            </a>
+            
+        </div>
+    </div>
+</div>
+<transition name="fade">
+    <div v-bind:class="{ 'single-column-drawer-mask': mounted }" v-if="isDrawerOpen" v-on:click="toggleDrawer"></div>
+</transition>
+<nav ref="navBar" class="navbar sticky-top navbar-light single-column-nav-container">
+    <div ref="navBackground" class="nav-background"></div>
+    <div class="container container-narrow nav-content">
+        <button id="nav_dropdown_btn" class="nav-dropdown-toggle" type="button" v-on:click="toggleDrawer">
+            <i class="material-icons">
+                menu
+            </i>
+        </button>
+        <a ref="navTitle" class="navbar-brand" href="/">
+            百忍千锻事遂全
+        </a>
+    </div>
+</nav>
+<div class="single-column-header-container" ref="pageHead" v-bind:style="{ transform: 'translateZ(0px) translateY('+.3*scrollY+'px)', opacity: 1-navOpacity }">
+    <a href="/">
+        <div class="single-column-header-title">百忍千锻事遂全</div>
+        <div class="single-column-header-subtitle"></div>
+    </a>
+</div>
+<div ref="sideContainer" class="side-container">
+    <a class="a-block nav-head false" href="/">
+        <div class="nav-title">
+            百忍千锻事遂全
+        </div>
+        <div class="nav-subtitle">
+            Behind the sheer black cliff rises <br>the golden glory of the invisible sun
+        </div>
+    </a>
+
+    <div class="nav-link-list">
+        <a class="a-block no-tint nav-link-item false" href="/archives">
+            Archive
+        </a>
+
+        
+        
+
+        
+        <a class="a-block no-tint nav-link-item" href="/atom.xml">
+            RSS
+        </a>
+        
+    </div>
+
+    
+    <div class="nav-footer">
+        Proudly published with Hexo<br>
+        
+        Theme <a href="https://github.com/SumiMakito/hexo-theme-journal/" target="_blank" rel="noreferrer noopener">Journal.</a> by <a href="https://mak1t0.cc/" target="_blank" rel="noreferrer noopener">Makito</a><br>
+        
+        &copy; 2019 <a href="http://yoursite.com">百忍千锻事遂全</a>
+    </div>
+</div>
+<div ref="extraContainer" class="extra-container">
+    <div class="pagination">
+        <a id="globalBackToTop" class="pagination-action animated-visibility" href="#top" :class="{ invisible: scrollY == 0 }">
+            <i class="material-icons pagination-action-icon">
+                keyboard_arrow_up
+            </i>
+        </a>
+
+        
+    </div>
+</div>
+
+<div ref="streamContainer" class="stream-container">
+    <div class="post-list-container post-list-container-shadow">
+        <div class="post">
+            <div class="post-head-wrapper-text-only" style="background-image: url('')">
+                <div class="post-title">
+                    网关服务器上设置V2Ray+dnsmasq透明代理
+                    <div class="post-meta">
+                        <time datetime="2017-11-27T12:45:45.000Z" itemprop="datePublished">
+                            2017-11-27 20:45
+                        </time>&nbsp;
+                        
+                        
+                        <i class="material-icons" style="">folder</i>
+                        
+                        <a href="/categories/工具/">工具</a>
+                        
+                        
+    
+                        
+                        
+                        <i class="material-icons" style="">label</i>
+                        
+                        <a href="/tags/Linux/">Linux</a>, 
+                        
+                        <a href="/tags/vps/">vps</a>, 
+                        
+                        <a href="/tags/v2ray/">v2ray</a>, 
+                        
+                        <a href="/tags/gfw/">gfw</a>
+                        
+                        
+                    </div>
+                </div>
+            </div>
+    
+            <div class="post-body-wrapper">
+                <div class="post-body">
+                    <blockquote>
+<p>实在受不了SS和SSR因为开大会而不停抽风的情况，一下午仔细读了V2Ray的说明，终于配置好了，其实搞清楚了也很简单。</p>
+</blockquote>
+<h2 id="注意"><a href="#注意" class="headerlink" title="注意"></a>注意</h2><p><strong>此配置是v2ray动态端口设置，并不保证绝对可用，本人在使用此配置一两个星期之后出现断流问题，估计是动态端口大流量被运营商屏蔽了，现在已经切换到了tls+WebSocket方式，具体服务器配置请参考<a href="https://toutyrater.github.io/advanced/tls.html" target="_blank" rel="noopener">这里</a>，而dnsmasq和iptables设置不受影响，只要你的v2ray设置正确就肯定能使用。</strong></p>
+<h2 id="V2Ray介绍"><a href="#V2Ray介绍" class="headerlink" title="V2Ray介绍"></a>V2Ray介绍</h2><p><a href="https://www.v2ray.com" target="_blank" rel="noopener">V2Ray</a>是个最新出现的<del>翻墙</del>爱国工具，集合了其他前辈工具的各种优点，问题就是配置安装稍微复杂了一些，这里有个<a href="https://toutyrater.github.io/" target="_blank" rel="noopener">白话文上手教程</a>，也还是挺复杂的，今天仔细读了一下，参考这两篇文章：<a href="https://cryptopunk.me/posts/27406/" target="_blank" rel="noopener">利用 V2Ray + GFWList 实现路由器自动翻墙</a>和<a href="https://0x32.tk/2017/06/26/v2ray+dnsmasq%E6%90%AD%E5%BB%BA%E9%80%8F%E6%98%8E%E4%BB%A3%E7%90%86%E7%BD%91%E5%85%B3/" target="_blank" rel="noopener">v2ray+dnsmasq搭建透明代理网关</a>，实现了用局域网上的一台linux服务器（比如树莓派）做网关，让全局域网的设备免配置国内外网站分流、自动翻墙，</p>
+<h2 id="墙外VPS设置"><a href="#墙外VPS设置" class="headerlink" title="墙外VPS设置"></a>墙外VPS设置</h2><p>我用的是<a href="http://www.vultr.com/?ref=6887528" target="_blank" rel="noopener">Vultr</a>的日本节点，最低配每个月5美元，优化后在这南方某城市联通100M宽带看YoutTube在晚上高峰期都甚至可以达到60,000 Kbps的疯狂速度，看4K视频都没问题。服务器操作系统选择的是Debian 8 x64(jessie)。</p>
+<h3 id="VPS端V2Ray安装与设置"><a href="#VPS端V2Ray安装与设置" class="headerlink" title="VPS端V2Ray安装与设置"></a>VPS端V2Ray安装与设置</h3><p>V2Ray官方提供了Linux下的一键安装脚本：</p>
+<pre><code>bash &lt;(curl -L -s https://install.direct/go.sh)
+</code></pre><p>运行完成后，编辑’/etc/v2ray/config.json’，配置如下(<strong>需要把注释去掉，不然用不了</strong>):</p>
+<pre><code>{
+  &quot;log&quot; : {
+    &quot;access&quot;: &quot;/var/log/v2ray/access.log&quot;,
+    &quot;error&quot;: &quot;/var/log/v2ray/error.log&quot;,
+    &quot;loglevel&quot;: &quot;warning&quot;
+  },
+  &quot;inbound&quot;: {
+    &quot;port&quot;: 23018, //自定义监听端口
+    &quot;protocol&quot;: &quot;vmess&quot;, //v2ray自己的协议
+    &quot;settings&quot;: {
+      &quot;clients&quot;: [
+        {
+          &quot;id&quot;: &quot;28f5f778-b947-11e7-abc4-cec278b6b50a&quot;,
+          //UUID在这网站上随机生成：
+          //https://www.uuidgenerator.net/
+          &quot;level&quot;: 1,
+          &quot;alterId&quot;: 64 //客户id，客户端上必须有同样数字的id
+        }
+      ],
+      &quot;detour&quot;:{
+        &quot;to&quot;:&quot;dynamicPort&quot; //随机端口，防止运营商封大流量端口，
+                          //只需要在服务器上设置
+      }
+    },
+    &quot;streamSettings&quot;:{
+      &quot;network&quot;:&quot;kcp&quot;, //打开mKcp，网速加速，详细设置在此配置文件末尾
+    }
+  },
+  &quot;inboundDetour&quot;:[
+    {
+      &quot;protocol&quot;: &quot;vmess&quot;,
+      &quot;port&quot;: &quot;10000-20000&quot;, //随机端口范围
+      &quot;tag&quot;: &quot;dynamicPort&quot;,       
+      &quot;settings&quot;: {
+        &quot;default&quot;: {
+          &quot;level&quot;: 1,
+          &quot;alterId&quot;: 32
+        }
+      },
+      &quot;allocate&quot;: {            
+        &quot;strategy&quot;: &quot;random&quot;,  
+        &quot;concurrency&quot;: 2,      
+        &quot;refresh&quot;: 3           
+      },
+      &quot;streamSettings&quot;: {
+        &quot;network&quot;: &quot;kcp&quot; //随机端口也要使用mKcp
+      }
+    }
+  ],
+  &quot;outbound&quot;: {
+    &quot;protocol&quot;: &quot;freedom&quot;,
+    &quot;settings&quot;: {}
+  },
+  &quot;outboundDetour&quot;: [
+    {
+      &quot;protocol&quot;: &quot;blackhole&quot;,
+      &quot;settings&quot;: {},
+      &quot;tag&quot;: &quot;blocked&quot;
+    }
+  ],
+ &quot;transport&quot;:{
+      &quot;tcpSettings&quot;:{
+         &quot;connectionReuse&quot;:true
+      },
+      &quot;kcpSettings&quot;:{ //mKCP设置，请看官方和其他教程设置
+         &quot;mtu&quot;:1350,
+         &quot;tti&quot;:20,
+         &quot;uplinkCapacity&quot;:100,
+         &quot;downlinkCapacity&quot;:100,
+         &quot;congestion&quot;:false,
+         &quot;readBufferSize&quot;:5,
+         &quot;writeBufferSize&quot;:5,
+         &quot;header&quot;:{
+            &quot;type&quot;:&quot;utp&quot;
+         }
+      }
+   }
+}
+</code></pre><p>保存文件之后可以测试配置文件是否正确：</p>
+<pre><code>jq . /etc/v2ray/config.json
+/usr/bin/v2ray/v2ray -test -config /etc/v2ray/config.json
+</code></pre><p>确保这两个命令都没有出错，就可以启动服务器端的V2ray了：</p>
+<pre><code>service v2ray restart
+</code></pre><h3 id="本地网关V2Ray设置"><a href="#本地网关V2Ray设置" class="headerlink" title="本地网关V2Ray设置"></a>本地网关V2Ray设置</h3><p>我用一台运行着Debian虚拟机的家用FreeNas服务器来作为网关，也可以换成任何可以运行V2ray的设备，比如树莓派或者高性能的Open-wrt的路由器。</p>
+<p>同样也是用脚本安装V2Ray（运行在其他架构比如说mips路由芯片的可以下载<a href="https://github.com/v2ray/v2ray-core/releases/latest" target="_blank" rel="noopener">V2Ray编译好的二进制文件</a>）：</p>
+<pre><code>bash &lt;(curl -L -s https://install.direct/go.sh)
+</code></pre><p>安装好后编辑配置文件<code>/etc/v2ray/config.json</code>，同样注意不要把注释也带进去，复制粘贴的要把注释删掉：</p>
+<pre><code>{
+  &quot;log&quot;: {
+    &quot;access&quot;: &quot;/var/log/v2ray/access.log&quot;,
+    &quot;error&quot;: &quot;/var/log/v2ray/error.log&quot;,
+    &quot;loglevel&quot;: &quot;warning&quot;
+    },
+
+  &quot;outbound&quot;: {
+    &quot;protocol&quot;: &quot;vmess&quot;,
+    &quot;settings&quot;:{
+        &quot;vnext&quot;:[
+            {
+                &quot;address&quot;:&quot;VPS服务器ip地址&quot;,
+                &quot;port&quot;: 23018, //端口号和VPS上的配置要一致
+                &quot;users&quot;: [
+                    {
+                    &quot;id&quot;: &quot;28f5f778-b947-11e7-abc4-cec278b6b50a&quot;,
+                    &quot;level&quot;: 1,
+                    &quot;alterId&quot;: 64
+                    }
+                ]
+            }
+        ]
+    },
+    &quot;streamSettings&quot;: {
+        &quot;network&quot;: &quot;kcp&quot;
+      },
+    &quot;mux&quot;: {&quot;enabled&quot;: true} //mux加速，只需在客户端设置
+},
+
+  &quot;outboundDetour&quot;: [
+    {
+        &quot;protocol&quot;:&quot;freedom&quot;,
+        &quot;settings&quot;:{
+        },
+        &quot;tag&quot;:&quot;direct&quot;
+     }    
+  ],
+  &quot;inbound&quot;: {
+  &quot;protocol&quot;: &quot;dokodemo-door&quot;,
+  &quot;port&quot;: 5354, //Dnsmasq查询代理
+  &quot;settings&quot;: {
+    &quot;address&quot;: &quot;8.8.8.8&quot;,
+    &quot;port&quot;: 53,
+    &quot;network&quot;: &quot;udp&quot;,
+    &quot;timeout&quot;: 0,
+    &quot;followRedirect&quot;: false
+    }
+},
+&quot;inboundDetour&quot;: [
+    {
+&quot;domainOverride&quot;:[&quot;http&quot;, &quot;tls&quot;], //如果有需要直连访问某个境外域名，需要加上这句，并在routing里设置相关域名
+&quot;protocol&quot;: &quot;dokodemo-door&quot;,
+&quot;port&quot;:1060, //所有1060 tcp端口流量走v2ray代理
+&quot;settings&quot;:{
+    &quot;network&quot;: &quot;tcp&quot;,
+    &quot;timeout&quot;: 30,
+    &quot;followRedirect&quot;: true
+            }
+    },
+    {
+    &quot;protocol&quot;:&quot;socks&quot;,
+    &quot;port&quot;:8080, //8080端口socks5代理备用
+    &quot;settings&quot;:{
+            &quot;auth&quot;:&quot;noauth&quot;,
+            &quot;udp&quot;:false,
+            &quot;ip&quot;:&quot;127.0.0.1&quot;
+            }
+    }
+    ],
+
+
+  &quot;routing&quot;: {//设置除了80,443端口外都走直连，这样可以避免BT等应用占用VPS带宽和触犯版权法；设置国内的域名和ip直连
+       &quot;strategy&quot;:&quot;rules&quot;,
+      &quot;settings&quot;:{
+         &quot;domainStrategy&quot;:&quot;IPIfNonMatch&quot;,
+         &quot;rules&quot;:[
+            {
+               &quot;type&quot;:&quot;field&quot;,
+               &quot;port&quot;:&quot;1-52&quot;,
+               &quot;outboundTag&quot;:&quot;direct&quot;
+            },
+            {
+               &quot;type&quot;:&quot;field&quot;,
+               &quot;port&quot;:&quot;54-79&quot;,
+               &quot;outboundTag&quot;:&quot;direct&quot;
+            },
+            {
+               &quot;type&quot;:&quot;field&quot;,
+               &quot;port&quot;:&quot;81-442&quot;,
+               &quot;outboundTag&quot;:&quot;direct&quot;
+            },
+            {
+               &quot;type&quot;:&quot;field&quot;,
+               &quot;port&quot;:&quot;444-3999&quot;,
+               &quot;outboundTag&quot;:&quot;direct&quot;
+            },
+            {
+               &quot;type&quot;:&quot;field&quot;,
+               &quot;port&quot;:&quot;4001-65535&quot;, //4000是Resilio Sync使用的端口
+               &quot;outboundTag&quot;:&quot;direct&quot;
+            },
+            &quot;domain&quot;:[ //设置需要直接连接的境外域名，要与上面的domainOverride配合使用
+              &quot;vultr.com&quot;
+                ],
+                  &quot;type&quot;:&quot;field&quot;,
+                &quot;outboundTag&quot;:&quot;direct&quot;
+              },
+            {
+               &quot;type&quot;:&quot;chinasites&quot;,
+               &quot;outboundTag&quot;:&quot;direct&quot;
+            },
+            {
+               &quot;type&quot;:&quot;field&quot;,
+               &quot;ip&quot;:[
+                  &quot;0.0.0.0/8&quot;,
+                  &quot;10.0.0.0/8&quot;,
+                  &quot;100.64.0.0/10&quot;,
+                  &quot;127.0.0.0/8&quot;,
+                  &quot;169.254.0.0/16&quot;,
+                  &quot;172.16.0.0/12&quot;,
+                  &quot;192.0.0.0/24&quot;,
+                  &quot;192.0.2.0/24&quot;,
+                  &quot;192.168.0.0/16&quot;,
+                  &quot;198.18.0.0/15&quot;,
+                  &quot;198.51.100.0/24&quot;,
+                  &quot;203.0.113.0/24&quot;,
+                  &quot;::1/128&quot;,
+                  &quot;fc00::/7&quot;,
+                  &quot;fe80::/10&quot;
+               ],
+               &quot;outboundTag&quot;:&quot;direct&quot;
+            },
+            {
+               &quot;type&quot;:&quot;chinaip&quot;,
+               &quot;outboundTag&quot;:&quot;direct&quot;
+            }
+         ]
+      }   
+  },
+   &quot;transport&quot;:{
+      &quot;tcpSettings&quot;:{
+         &quot;connectionReuse&quot;:true
+      },
+      &quot;kcpSettings&quot;:{
+         &quot;mtu&quot;:1350,
+         &quot;tti&quot;:20,
+         &quot;uplinkCapacity&quot;:100,
+         &quot;downlinkCapacity&quot;:100,
+         &quot;congestion&quot;:false,
+         &quot;readBufferSize&quot;:5,
+         &quot;writeBufferSize&quot;:5,
+         &quot;header&quot;:{
+            &quot;type&quot;:&quot;utp&quot;
+         }
+      }
+   }
+}
+</code></pre><p>测试<code>/usr/bin/v2ray/v2ray -test -config /etc/v2ray/config.json</code>如果没问题就可以启动客户端这边的V2Ray了：</p>
+<pre><code>service v2ray restart
+service v2ray status
+</code></pre><p>到目前为止已经搭建好了一个以客户端地址为网关地址，可以根据IP和域名判断走代理还是直连的v2ray代理服务器。</p>
+<h3 id="网关iptables设置"><a href="#网关iptables设置" class="headerlink" title="网关iptables设置"></a>网关iptables设置</h3><p>需要设置iptables把所有tcp流量导入网关的1060端口：</p>
+<pre><code>iptables -t nat -N V2RAY
+iptables -t nat -A V2RAY -d 11.22.33.44 -j RETURN //改成你的 VPS 的 IP
+iptables -t nat -A V2RAY -d 0.0.0.0/8 -j RETURN
+iptables -t nat -A V2RAY -d 10.0.0.0/8 -j RETURN
+iptables -t nat -A V2RAY -d 127.0.0.0/8 -j RETURN
+iptables -t nat -A V2RAY -d 169.254.0.0/16 -j RETURN
+iptables -t nat -A V2RAY -d 172.16.0.0/12 -j RETURN
+iptables -t nat -A V2RAY -d 192.168.0.0/16 -j RETURN
+iptables -t nat -A V2RAY -d 224.0.0.0/4 -j RETURN
+iptables -t nat -A V2RAY -d 240.0.0.0/4 -j RETURN
+iptables -t nat -A V2RAY -p tcp -j REDIRECT --to-ports 1060
+iptables -t nat -A PREROUTING -p tcp -j V2RAY
+</code></pre><p>这个方法是参考<a href="https://cryptopunk.me/posts/27406/的方法" target="_blank" rel="noopener">利用 V2Ray + GFWList 实现路由器自动翻墙</a>，我简化了一下，而且每次重开机都要重新设置iptables，原文有自动运行的脚本。</p>
+<h3 id="解决DNS污染"><a href="#解决DNS污染" class="headerlink" title="解决DNS污染"></a>解决DNS污染</h3><p>用V2ray转发dnsmasq的非标准端口查询GFWlist里面的域名（好像有了代理再用非标准端口查询有点多此一举？），从而避免DNS查询结果被污染。GFWlist配置文件使用<a href="https://github.com/cokebar/gfwlist2dnsmasq" target="_blank" rel="noopener">gfwlist2dnmasq</a>这个脚本来生成。</p>
+<pre><code>apt-get install dnsmasq
+nano /etc/dnsmasq.conf
+</code></pre><p>dnsmasq配置文件：</p>
+<pre><code>listen-address=127.0.0.1
+listen-address=192.168.xx.xxx //你的网关地址
+cache-size=102400
+conf-dir=/etc/dnsmasq.d
+</code></pre><p>墙内墙外域名分开查询</p>
+<pre><code>git clone https://github.com/cokebar/gfwlist2dnsmasq
+cd gfwlist2dnsmasq
+./gfwlist2dnsmasq.sh -d 127.0.0.1 -p 5354 -o dnsmasq_gfwlist.conf
+//5354 是V2ray配置的转发dns查询端口号
+mkdir /etc/dnsmasq.d
+cp dnsmasq_gfwlist.conf /etc/dnsmasq.d
+cd /etc/dnsmasq.d
+wget https://raw.githubusercontent.com/felixonmars/dnsmasq-china-list/master/accelerated-domains.china.conf
+</code></pre><p>很奇怪我这里114DNS突然不能解析网易云音乐的媒体文件服务器了，所以用114DNS听不了网易云音乐，看了下dnsmasq的记录居然是查询了网易ipv6的地址可是114不是ipv6/ipv4双栈的服务器，所以要在<code>accelerated-domains.china.conf</code>里改一下：</p>
+<p>把<code>server=/126.net/114.114.114.114</code>和<code>server=/163.com/114.114.114.114</code>改成<code>server=/126.net/202.120.2.101</code>和<code>server=/163.com/202.120.2.101</code></p>
+<p>然后重启dnsmasq</p>
+<pre><code>service dnsmasq restart
+</code></pre><h3 id="局域网路由器网关设置"><a href="#局域网路由器网关设置" class="headerlink" title="局域网路由器网关设置"></a>局域网路由器网关设置</h3><p>我用的是OpenWrt系统的路由器，版本号是Chaos Calmer 15.05。<br>设置网关和DNS服务器的地方在<code>网络 -&gt; 接口 -&gt; LAN</code><br>页面下方<code>DHCP服务器</code>的<code>高级设置</code>里：<br><code>DHCP-选项</code>输入<code>3,192.168.xx.xxx</code>和<code>6,192.168.xx.xxx</code>(你的网关设备内网ip地址)</p>
+<p>其他类型的路由器请自行寻找设置网关和DNS服务器的方法。或者在局域网各设备上分别设置。</p>
+<h3 id="清除局域网设备dns缓存"><a href="#清除局域网设备dns缓存" class="headerlink" title="清除局域网设备dns缓存"></a>清除局域网设备dns缓存</h3><p>windows设备在命令行输入</p>
+<pre><code>ipconfig /flushdns
+</code></pre><p>Android和iOS设备开一下飞行模式就好。<br>没有Mac，请自己搜索解决方法。</p>
+<h2 id="完成"><a href="#完成" class="headerlink" title="完成"></a>完成</h2><p>以上步骤都完成之后，没有意外的话应该都可以<del>自由</del>爱国上网了。<br>如果觉得本文对你有所帮助，可以通过我的邀请连接<a href="http://www.vultr.com/?ref=6887528" target="_blank" rel="noopener">注册Vultr</a>。</p>
+
+                </div>
+            </div>
+    
+            <nav class="post-pagination">
+    
+    <a class="newer-posts" href="/2017/12/22/v2ray-websocket-tls-apache/">
+        Previous post<br>在Apache服务器上实现tls Websocket转发v2ray代理
+    </a>
+    
+    <span class="page-number"></span>
+    
+    <a class="older-posts" href="/2017/07/03/deploy-ss-on-openwrt/">
+        Next post<br>在OpenWrt上搭建SS+Pdnsd+ChinaDNS分流科学上网，Kcptun+BBR加速
+    </a>
+    
+</nav>
+
+    
+            
+
+
+        </div>
+    </div>
+    <div class="single-column-footer">
+    Proudly published with Hexo<br>
+    
+    Theme <a href="https://github.com/SumiMakito/hexo-theme-journal/" target="_blank" rel="noreferrer noopener">Journal.</a> by <a href="https://mak1t0.cc/" target="_blank" rel="noreferrer noopener">Makito</a><br>
+    
+    &copy; 2018 <a href="http://yoursite.com">百忍千锻事遂全</a>
+</div>
+</div>
+
+</div>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.4/dist/umd/popper.min.js" integrity="sha256-EGs9T1xMHdvM1geM8jPpoo8EZ1V1VRsmcJz8OByENLA=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/js/bootstrap.min.js" integrity="sha256-VsEqElsCHSGmnmHXGQzvoWjWwoznFSZc6hs7ARLRacQ=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.min.js" integrity="sha256-FtWfRI+thWlNz2sB3SJbwKx5PgMyKIVgwHCTwa3biXc=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/smooth-scroll@14.2.1/dist/smooth-scroll.polyfills.min.js" integrity="sha256-CI4Gq5E0io1Pv0xM3qPM+NUIOhbIBvC3GiN1Y4KhXpw=" crossorigin="anonymous"></script>
+<script src="/js/journal.js?63063269"></script>
+
+
+
+</body>
+</html>
