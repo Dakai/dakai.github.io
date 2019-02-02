@@ -4,12 +4,12 @@
 <html lang="zh-Hans" xmlns:v-bind="http://www.w3.org/1999/xhtml">
 
 <head><meta name="generator" content="Hexo 3.8.0">
-    <title>標籤: gfw - 百忍千锻事遂全</title>
+    <title>用TFTP重置网件WNDR4300路由器 - 百忍千锻事遂全</title>
 <meta charset="utf-8">
 <meta name="X-UA-Compatible" content="IE=edge">
 <meta name="author" content="Dakai">
-<meta name="description" content="A Blog Powered By Hexo">
-<meta name="keywords" content="">
+<meta name="description" content="路由器配置错了，导致无法正常通过浏览器或SSH登陆，即使按了机器上的Restore Factory Setting...">
+<meta name="keywords" content="TFTP,OpenWrt,WNDR4300">
 
 <link rel="alternate" type="application/atom+xml" title="ATOM 1.0" href="/atom.xml">
 
@@ -20,7 +20,7 @@
     <meta name="renderer" content="webkit">
     <meta name="theme-color" content="#ffffff">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/css/bootstrap.min.css" integrity="sha256-eSi1q2PG6J7g7ib17yAaWMcrr5GrtohYChqibrV7PBE=" crossorigin="anonymous">
-<link rel="stylesheet" href="/css/journal.css?18730824">
+<link rel="stylesheet" href="/css/journal.css?25018639">
 <script src="/js/loadCSS.js"></script>
 <script>
     loadCSS("https://fonts.googleapis.com/css?family=Lora|Montserrat|Fira+Mono|Material+Icons");
@@ -151,76 +151,86 @@
         </a>
 
         
-        
-
-        
-
-        
-        
     </div>
 </div>
 
 <div ref="streamContainer" class="stream-container">
     <div class="post-list-container post-list-container-shadow">
-        <div class="post-item-wrapper post-item-wrapper-no-hover">
-            <div class="post-item post-item-no-gaps">
-                <div class="post-item-info-wrapper">
-                    <div class="post-item-title  post-item-title-small">
-                        <a href="/tags/">標籤</a> / gfw
+        <div class="post">
+            <div class="post-head-wrapper-text-only" style="background-image: url('')">
+                <div class="post-title">
+                    用TFTP重置网件WNDR4300路由器
+                    <div class="post-meta">
+                        <time datetime="2019-02-01T16:00:00.000Z" itemprop="datePublished">
+                            2019-02-02 00:00
+                        </time>&nbsp;
+                        
+                        
+                        <i class="material-icons" style="">folder</i>
+                        
+                        <a href="/categories/工具/">工具</a>
+                        
+                        
+    
+                        
+                        
+                        <i class="material-icons" style="">label</i>
+                        
+                        <a href="/tags/TFTP/">TFTP</a>, 
+                        
+                        <a href="/tags/OpenWrt/">OpenWrt</a>, 
+                        
+                        <a href="/tags/WNDR4300/">WNDR4300</a>
+                        
+                        
                     </div>
                 </div>
             </div>
+    
+            <div class="post-body-wrapper">
+                <div class="post-body">
+                    <p>路由器配置错了，导致无法正常通过浏览器或SSH登陆，即使按了机器上的Restore Factory Settings也没用的时候，可以尝试用TFTP恢复。 </p>
+<h3 id="步骤"><a href="#步骤" class="headerlink" title="步骤"></a>步骤</h3><ol>
+<li>电脑连上路由器LAN口，把网络连接以太网属性里的IPv4属性修改为以下设置：<br><img src="https://raw.githubusercontent.com/Dakai/testing/master/sp190202_142359.png" alt="ip设置"></li>
+<li><p>路由器关机，用牙签或什么的顶入机器下面的Restore Factory按钮，不要松开，然后开机，等待电源灯从橙色闪烁变为绿色闪烁时再松开。</p>
+</li>
+<li><p>运行CMD，使用<code>ping 192.168.1.1 -t</code>命令查看是否能ping通路由器，如果不行重复以上步骤。</p>
+</li>
+<li><p>下载固件文件和固件上传工具tftp2：</p>
+<ul>
+<li>Netgear WNDR4300原厂固件下载页面：<a href="https://www.netgear.com/support/product/WNDR4300" target="_blank" rel="noopener">https://www.netgear.com/support/product/WNDR4300</a></li>
+<li>OpenWrt 固件（只有V1版4300才可以刷Openwrt）下载地址：<a href="http://downloads.openwrt.org/releases/18.06.1/targets/ar71xx/nand/openwrt-18.06.1-ar71xx-nand-wndr4300-ubi-factory.img" target="_blank" rel="noopener">http://downloads.openwrt.org/releases/18.06.1/targets/ar71xx/nand/openwrt-18.06.1-ar71xx-nand-wndr4300-ubi-factory.img</a></li>
+<li>tftp2下载地址：<a href="https://pan.baidu.com/s/1GWxLQyUWwPGEd-A2sCYXmQ" target="_blank" rel="noopener">百度网盘</a></li>
+</ul>
+</li>
+<li><p>运行tftp2.exe，如下图设置刷入固件：<img src="https://raw.githubusercontent.com/Dakai/testing/master/sp190202_145538.png" alt="tftp2"></p>
+</li>
+<li>等待路由器刷入固件自动重启过后就可以在浏览器登入路由器管理页面了。</li>
+</ol>
+
+                </div>
+            </div>
+    
+            <nav class="post-pagination">
+    
+    <span class="page-number"></span>
+    
+    <a class="older-posts" href="/2019/01/22/hello-world/">
+        下一篇<br>Hello World
+    </a>
+    
+</nav>
+
+    
+            
+
+<div class="post-comment-wrapper">
+    <div id="disqus_thread"></div>
+</div>
+
+
         </div>
-        
-        <a href="/2017/12/22/v2ray-websocket-tls-apache/" class="a-block">
-            <div class="post-item-wrapper">
-                <div class="post-item post-item-no-gaps">
-                    <div class="post-item-info-wrapper">
-                        <div class="post-item-title">
-                            在Apache服务器上实现tls Websocket转发v2ray代理
-                        </div>
-                        <div class="post-item-meta">
-                            2017-12-22
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </a>
-        
-        <a href="/2017/11/27/v2ray/" class="a-block">
-            <div class="post-item-wrapper">
-                <div class="post-item post-item-no-gaps">
-                    <div class="post-item-info-wrapper">
-                        <div class="post-item-title">
-                            网关服务器上设置V2Ray+dnsmasq透明代理
-                        </div>
-                        <div class="post-item-meta">
-                            2017-11-27
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </a>
-        
-        <a href="/2017/07/03/deploy-ss-on-openwrt/" class="a-block">
-            <div class="post-item-wrapper">
-                <div class="post-item post-item-no-gaps">
-                    <div class="post-item-info-wrapper">
-                        <div class="post-item-title">
-                            在OpenWrt上搭建SS+Pdnsd+ChinaDNS分流科学上网，Kcptun+BBR加速
-                        </div>
-                        <div class="post-item-meta">
-                            2017-07-03
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </a>
-        
-
-        
     </div>
-
     <div class="single-column-footer">
     Proudly published with Hexo<br>
     
@@ -236,7 +246,23 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/js/bootstrap.min.js" integrity="sha256-VsEqElsCHSGmnmHXGQzvoWjWwoznFSZc6hs7ARLRacQ=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.min.js" integrity="sha256-FtWfRI+thWlNz2sB3SJbwKx5PgMyKIVgwHCTwa3biXc=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/smooth-scroll@14.2.1/dist/smooth-scroll.polyfills.min.js" integrity="sha256-CI4Gq5E0io1Pv0xM3qPM+NUIOhbIBvC3GiN1Y4KhXpw=" crossorigin="anonymous"></script>
-<script src="/js/journal.js?52848249"></script>
+<script src="/js/journal.js?24069418"></script>
+
+
+<script>
+    var disqus_shortname = 'ferrummagnus';
+    var disqus_config = function () {
+        this.page.url = 'https://ferrummagnus.com/2019/02/02/reset-WNDR4300-with-TFTP/';
+        this.page.identifier = '/2019/02/02/reset-WNDR4300-with-TFTP/';
+    };
+    (function () {
+        var d = document, s = d.createElement('script');
+        s.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.body || d.head).appendChild(s);
+    })();
+</script>
+
 
 </body>
 </html>
